@@ -6,28 +6,85 @@ from matplotlib.ticker import PercentFormatter
 # 总运输量：100,000,000吨
 
 # 甲车：一年能运537000吨货物，成本是1.56亿美元
-annual_capacity_car1 = 537000  # 年运输量（吨）
-cost_car1_per_year = 1560000000  # 年成本（美元）
+# 现在有6辆甲车
+num_cars_car1 = 6  # 甲车数量
+initial_capacity_car1_per_car = 537000 / 1  # 每辆车初始年运输量（吨）
+cost_car1_per_year_per_car = 1560000000 / 1  # 每辆车年成本（美元）
+growth_rate_car1 = 0.15  # 甲车容量年增长率（指数增长）
 
 # 乙车：一次能运125吨货物，一天能发三次，一次的成本是1亿美元
-# 现在有10个乙车同时运输
-num_cars_car2 = 10  # 乙车数量
-capacity_car2_per_trip_per_car = 125  # 每辆车每次运输量（吨）
+# 乙车数量管够，根据需要调整
+capacity_car2_per_trip_per_car_initial = 125  # 每辆车每次初始运输量（吨）
 trips_per_day = 3  # 每天次数
 cost_car2_per_trip_per_car = 100000000  # 每辆车每次成本（美元）
+growth_rate_car2 = 0.8  # 乙车容量年增长率（对数增长）
 
-# 计算甲车的时间和经济成本
+# 计算甲车的时间和经济成本，考虑容量增长
 total_cargo = 100000000  # 总运输量（吨）
 
-time_cost_car1 = total_cargo / annual_capacity_car1  # 时间成本（年）
-economic_cost_car1 = (total_cargo / annual_capacity_car1) * cost_car1_per_year  # 经济成本（美元）
+def calculate_car1_cost_and_time():
+    """
+    计算甲车的时间和经济成本，考虑容量指数增长
+    返回：(时间成本, 经济成本)
+    """
+    accumulated_cargo = 0
+    total_cost = 0
+    year = 0
+    
+    while accumulated_cargo < total_cargo:
+        # 计算当年的每辆车容量（指数增长）
+        current_capacity_per_car = initial_capacity_car1_per_car * (np.exp(growth_rate_car1 * year))
+        # 计算当年的总容量（6辆车）
+        current_total_capacity = current_capacity_per_car * num_cars_car1
+        # 计算当年能运输的货物量
+        cargo_this_year = min(current_total_capacity, total_cargo - accumulated_cargo)
+        accumulated_cargo += cargo_this_year
+        # 计算当年的成本（6辆车）
+        total_cost += cost_car1_per_year_per_car * num_cars_car1
+        year += 1
+    
+    return year, total_cost
 
-# 计算乙车的时间和经济成本
-capacity_car2_per_trip = capacity_car2_per_trip_per_car * num_cars_car2  # 10辆车每次总运输量（吨）
-cost_car2_per_trip = cost_car2_per_trip_per_car * num_cars_car2  # 10辆车每次总成本（美元）
-annual_capacity_car2 = capacity_car2_per_trip * trips_per_day * 365  # 年运输量（吨）
-time_cost_car2 = total_cargo / annual_capacity_car2  # 时间成本（年）
-economic_cost_car2 = (total_cargo / capacity_car2_per_trip) * cost_car2_per_trip  # 经济成本（美元）
+# 计算乙车的时间和经济成本，考虑容量增长但不考虑成本递减
+def calculate_car2_cost_and_time():
+    """
+    计算乙车的时间和经济成本，考虑容量对数增长但不考虑成本递减
+    返回：(时间成本, 经济成本)
+    """
+    accumulated_cargo = 0
+    total_cost = 0
+    day = 0
+    
+    while accumulated_cargo < total_cargo:
+        # 计算当天的年数
+        year = day / 365
+        # 计算当天的每辆车容量（对数增长）
+        current_capacity_per_trip_per_car = capacity_car2_per_trip_per_car_initial * np.log(1 + growth_rate_car2 * year)
+        # 乙车数量管够，根据需要调整（每次运输使用足够的车辆）
+        # 每次运输至少需要的车辆数，确保每次运输量合理
+        num_cars_needed = max(10, int(np.ceil(100000 / current_capacity_per_trip_per_car)))
+        current_capacity_per_trip = current_capacity_per_trip_per_car * num_cars_needed
+        current_cost_per_trip = cost_car2_per_trip_per_car * num_cars_needed  # 不考虑成本递减
+        
+        # 计算当天能运输的货物量（每天3次）
+        cargo_this_day = min(current_capacity_per_trip * trips_per_day, total_cargo - accumulated_cargo)
+        accumulated_cargo += cargo_this_day
+        
+        # 计算当天的成本（不考虑成本递减）
+        for _ in range(trips_per_day):
+            if accumulated_cargo >= total_cargo:
+                break
+            # 每次成本相同，不考虑递减
+            total_cost += current_cost_per_trip
+        
+        day += 1
+    
+    time_years = day / 365
+    return time_years, total_cost
+
+# 计算甲车和乙车的时间和经济成本
+time_cost_car1, economic_cost_car1 = calculate_car1_cost_and_time()
+time_cost_car2, economic_cost_car2 = calculate_car2_cost_and_time()
 
 # 方案一：甲车（经济成本低，时间成本高）
 cost1_time = time_cost_car1  # 时间成本（年）
