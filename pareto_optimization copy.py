@@ -15,7 +15,7 @@ MAX_THROUGHPUT = 5.0 * 10**6     # 港口每年最大吞吐 500万吨
 
 # --- 初始成本 (Initial Costs) ---
 COST_DIRECT_INIT = 1.9 * 10**6   # 火箭初始成本 ($/ton)
-COST_HYBRID_INIT = 0.3 * 10**6   # 电梯初始成本 ($/ton)
+COST_HYBRID_INIT = 0.22 * 10**6   # 电梯初始成本 ($/ton)
 
 # --- 技术进化参数 (Tech Evolution) ---
 # 1. 太空电梯 (指数增长)
